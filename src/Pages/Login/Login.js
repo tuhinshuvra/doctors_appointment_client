@@ -3,15 +3,24 @@ import { useContext } from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthProvider';
+import useToken from '../../hooks/useToken';
 import './Login.css';
 
 const Login = () => {
     const { register, formState: { errors }, handleSubmit } = useForm();
     const { signin } = useContext(AuthContext);
     const [loginError, setLoginError] = useState('');
+    const [loginUserEmail, setLoginUserEmail] = useState('');
+    const [token] = useToken(loginUserEmail);
+    const location = useLocation();
     const navigate = useNavigate();
+
+    const from = location.state?.form?.pathname || '/';
+    if (token) {
+        navigate(from, { replace: true });
+    }
 
     const handleLogin = (data) => {
         console.log(data);
@@ -20,14 +29,14 @@ const Login = () => {
             .then(result => {
                 console.log("UserData:", result.user);
                 toast.success('User login successfully');
-                navigate('/');
+                setLoginUserEmail(data.email);
             })
             .catch(error => {
                 console.log("Login Error: ", error.message)
                 setLoginError(error.message);
             });
-
     }
+
     return (
         <div className=' h-[500px] flex justify-center items-center'>
             <div className=' '>

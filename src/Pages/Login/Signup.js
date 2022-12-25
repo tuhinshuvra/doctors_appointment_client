@@ -5,15 +5,21 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthProvider';
+import useToken from '../../hooks/useToken';
 import './Login.css';
 
 const Signup = () => {
     const { register, formState: { errors }, handleSubmit } = useForm();
-    // const [data, setData] = useState('');
     const [loginError, setLoginError] = useState('');
+    const [createdUserEmail, setCreatedUserEmail] = useState('');
+    const [token] = useToken(createdUserEmail);
     const navigate = useNavigate();
 
-    const { createUser } = useContext(AuthContext);
+    if (token) {
+        navigate('/');
+    }
+
+    const { createUser, updateUser } = useContext(AuthContext);
 
     const handleSignup = (data) => {
         console.log(data);
@@ -22,14 +28,44 @@ const Signup = () => {
             .then(result => {
                 const user = result.user;
                 console.log("Singup User Data:", user);
+
+                const userInfo = {
+                    displayName: data.name,
+                    // phoneNumber: data.phone,
+                }
+                updateUser(userInfo)
+                    .then(result => {
+                        console.log("userData:", result.message);
+                    })
+                    .catch(error => {
+                        console.log(error.message);
+                    })
+                saveUserToDatabase(data.name, data.email)
+
                 toast.success('User created Successfully');
-                navigate('/');
             })
             .catch(error => {
                 console.log("Signup Error: ", error.message);
                 setLoginError(error.message);
             })
     }
+
+    const saveUserToDatabase = (name, email) => {
+        const user = { name, email };
+        fetch('http://localhost:5000/users', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(user)
+        })
+            .then(respone => respone.json())
+            .then(data => {
+                // console.log(data);
+                setCreatedUserEmail(email);
+            })
+    }
+
     return (
         <div className=' h-[500px] flex justify-center items-center'>
             <div className=' '>
@@ -48,6 +84,12 @@ const Signup = () => {
                         { required: 'Email is required' })}
                         className="input input-bordered w-full" placeholder="Email" />
                     {errors.email && <p className=' text-red-600' role="alert">{errors.email?.message}</p>}
+
+                    {/* <label className="label"><span className="label-text font-bold">Phone</span></label>
+                    <input type="phone"  {...register("phone",
+                        { required: 'Phone is required' })}
+                        className="input input-bordered w-full" placeholder="Phone" />
+                    {errors.phone && <p className=' text-red-600' role="alert">{errors.phone?.message}</p>} */}
 
                     <label className="label"><span className="label-text font-bold">Password</span></label>
                     <input type="password"  {...register("password",

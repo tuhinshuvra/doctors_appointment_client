@@ -1,9 +1,20 @@
 import { format } from 'date-fns';
 import React from 'react';
+import Loader from '../../Loader/Loader';
+import { useState } from 'react';
+import { useContext } from 'react';
+import { toast } from 'react-hot-toast';
+import { AuthContext } from '../../../contexts/AuthProvider';
 
-const BookingModal = ({ treatment, setTreatment, selectedDate }) => {
+const BookingModal = ({ treatment, setTreatment, selectedDate, refetch }) => {
+    const { user } = useContext(AuthContext);
     const { name, slots } = treatment;
+    const [loading, setLoading] = useState(true);
     const date = format(selectedDate, 'PP')
+
+    if (loading) {
+        <Loader></Loader>
+    }
 
     const handleBooking = (event) => {
         event.preventDefault();
@@ -26,7 +37,27 @@ const BookingModal = ({ treatment, setTreatment, selectedDate }) => {
         // Todo sent submit data
         // ########################### 
         // after send submit data 
-        setTreatment(null);
+
+        fetch('http://localhost:5000/bookings', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(booking)
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                if (data.acknowledged) {
+                    setTreatment(null);
+                    toast.success('Booking Confirmed')
+                    setLoading(false);
+                    refetch();
+                }
+                else {
+                    toast.error(data.message);
+                }
+            })
     }
 
     return (
@@ -50,8 +81,8 @@ const BookingModal = ({ treatment, setTreatment, selectedDate }) => {
                                     </option>)
                             }
                         </select>
-                        <input type="text" name='name' placeholder="Your Name" className="input input-bordered w-full  mb-2" />
-                        <input type="email" name='email' placeholder="Email Address" className="input input-bordered w-full  mb-2" />
+                        <input type="text" name='name' defaultValue={user?.displayName} disabled className="input input-bordered w-full  mb-2" />
+                        <input type="email" name='email' defaultValue={user?.email} disabled className="input input-bordered w-full  mb-2" />
                         <input type="text" name='phone' placeholder="Phone" className="input input-bordered w-full  mb-2" />
                         <input type="submit" value='Submit' className='btn btn-accent w-full  mb-2' />
                     </form>
