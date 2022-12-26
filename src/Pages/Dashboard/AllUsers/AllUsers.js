@@ -20,9 +20,9 @@ const AllUsers = () => {
                 authorization: `bearer ${localStorage.getItem('accessToken')}`
             }
         })
-            .then(respone => respone.json())
+            .then(response => response.json())
             .then(data => {
-                console.log(data);
+                // console.log(data);
                 if (data.modifiedCount > 0) {
                     toast.success('User Make Admin Successfully')
                     refetch();
@@ -51,7 +51,7 @@ const AllUsers = () => {
                                 <td>{user.name}</td>
                                 <td>{user.email}</td>
                                 <td>{user?.role === "admin" ? <p className='font-extrabold text-blue-800'>Admin</p> : <button className=' btn btn-sm btn-primary' onClick={() => handleMakeAdmin(user.email)}>Make Admin</button>} </td>
-                                <td> <button className='btn btn-sm btn-warning'>Delete</button></td>
+                                <td> <button className='btn btn-sm btn-error'>Delete</button></td>
                             </tr>
                         )}
                     </tbody>
